@@ -1,189 +1,125 @@
 
 
-
+#include "Poll.hpp"
+#include "Post.hpp"
+#include <string>
+#include <vector>
 #include <iostream>
+#include <time.h>
+
+ 
+
+Poll::Poll(const std::string poll_post_title, const std::string poll_post_question, const std::string poll_creator_username, std::vector<std::string> options)
+:Post(poll_post_title,poll_post_question, poll_creator_username){
+    //set the title, body, and username of the Poll post to what was passed by the user 
+    Post::setTitle(poll_post_title);
+    Post::setBody(poll_post_question);
+    Post::setUsername(poll_creator_username);
+    
+
+    //generate the current time and store it 
+    //time_t time_stamp_ = time(NULL);
+    getTimeStamp();
+    
+    //initialize the vectors of options and their respective number of votes
+    //side note: respective number of votes poll_options_votes was not passed as parameter
+    for (int i = 0; i < poll_options.size(); i++) {
+        poll_options.push_back(options[i]);
+        poll_options_votes.push_back(0);
+    }
+  
+    
+
+}
+    
+
+bool Poll::votePoll(const int& index){
 
 
-/* Default constructor*/
-template<typename ItemType>
-LinkedList<ItemType>::LinkedList() : head_{nullptr}, size_{0} {}
-
-
-
-/* Destructor */
-template<typename ItemType>
-LinkedList<ItemType>::~LinkedList() {
-    clear();
+    //true if index is within range and we can vote for a poll, false otherwise
+    if (index < poll_options.size()) {        
+        poll_options_votes[index] += 1;   //increments the poll votes based on the index which will refer to the index
+        return true;
+    } 
+    return false; 
 }
 
+/*
+    Mutator function used to either add a poll or change one of the poll options
+    @param new_poll_option : a reference to the new poll option
+    @param poll_for_replacement : a reference to int that can either represent the index of the 
+                                existing option that will be replaced or if choice_number > 
+                                current number of options, it will add this new option to the 
+                                poll. 
+    @post: resets the number of votes for this option. 
+*/
+void Poll::changePollOption(const std::string& new_poll_option, const int& new_poll_option_index){ 
 
-
-/* @return  : the head pointer
-This function is for grading purposes*/
-template<typename ItemType>
-Node<ItemType>* LinkedList<ItemType>::getHeadPtr() const {
-    return head_;
+    //the new poll option is replacing an old one. 
+    if (new_poll_option_index < poll_options.size()) { 
+        poll_options[new_poll_option_index] = new_poll_option; //replace the old option at given index with the new option
+        poll_options_votes[new_poll_option_index] = 0; //set the number of votes for the replaced option to 0
+    } else {
+        //a new poll option is being added to the vector of options
+        poll_options.push_back(new_poll_option); //push the new option to the back of the vector
+        poll_options_votes.push_back(0); //set the number of votes for the new option to 0
+    }
 }
-
-
 
 
 /*
-    @post   : removes all items from the caller list
-**/
-template<typename ItemType>
-void LinkedList<ItemType>::clear() {
-
-    Node<ItemType>* curr_item = head_;
-    while(curr_item != nullptr) {
-        Node<ItemType>* temp = curr_item;
-        curr_item = curr_item->getNext();
-        // delete temp->getItem();
-        // temp->setItem(NULL);
-        // temp->setNext(nullptr);
-        delete temp;
-        temp = nullptr;
+    Accessor function
+    @post : prints the reaction to the post in this format 
+            (example where option_n is the string at postition n in the poll options vector):
+            0 votes for: option_1
+            5 votes for: option_2
+            2 votes for: option_3
+            ...
+*/
+void Poll::getPollOptions() const{
+    for (int i{0} ; i <= poll_options.size() -1 ; i++) {
+        std::cout << poll_options_votes[i] << " votes for: " << poll_options[i] << std::endl;
     }
-
+    std::cout << std::endl;
 }
-
-
 
 /*
-    @param  item: the item to insert in the list
-    @param  position: the position where to inserted
-    @pre position is a valid place within the list, otherwise false will be returned
-    @return   :  true if the item has been inserted in the caller list,
-                false otherwise
-    @post     : Inserts item in  list at  position
-
-**/
-template<typename ItemType>
-bool LinkedList<ItemType>::insert(const ItemType& item, const int &position){
-    if((position < 0 || position > size_)){
-        return false;
-    }
-
-    Node<ItemType> *node = new Node<ItemType>();
-    node->setItem(item);
-
-    if(size_ == 0){
-        head_ = node;
-    }
-    else {
-        Node<ItemType> *iterator;
-
-        if(position == 0){
-            node->setNext(head_);
-            head_ = node;
-        }
-
-        else if (position == size_){
-            iterator = getAtPos(size_-1);
-            iterator->setNext(node);
-        }
-        else {
-            iterator = getAtPos(position-1);
-            node->setNext(iterator->getNext());
-            iterator->setNext(node);
-        }
-    }
-    size_++;
-    return true;
+    Accessor function
+    @param option_index : the index of the option
+    @return : returns the number of votes for a given option
+*/
+int Poll::getPollVotes(int option_index) const{
+    return poll_options_votes[option_index];
 }
-
-
-
 
 /*
-    @param  position:  the position where to remove
-    @pre position is a valid place within the list, otherwise false will be returned
-    @pre      : returns true if the item at position has been removed from the list,
-                false otherwise
-    @post     : removes node at  position
-**/
-template <typename ItemType>
-bool LinkedList<ItemType>::remove(const int&position) {
-    if (position < 0 || position >= size_) {
-        return false;
-    }
-
-    Node<ItemType> *iterator;
-
-    if (position == 0){
-        iterator = head_;
-        head_ = head_->getNext();
-    }
-    else {
-        iterator = getAtPos(position-1);
-        iterator->setNext(iterator->getNext()->getNext());
-        iterator = iterator->getNext();
-    }
-
-    return true;
-
+    @post: displays the whole Poll post (example):
+    \n
+    {post_title_} at {time_stamp_};
+    {post_body_}
+    \n
+    0 votes for: option_1
+    5 votes for: option_2
+    2 votes for: option_3
+    ...
+    \n
+*/
+void Poll::displayPost(){
+    std::cout << '\n' << getTitle() << " at ";
+    getTimeStamp();
+    std::cout << getBody() << std::endl;
+    getPollOptions();
+    
 }
+    
+    
+    
+    
+    
+    
+    
+    
+    
 
 
 
-/*
-    @param   item : the item to find in the list
-    @pre      : takes item object and checks if exist in list and return
-    @return   : returns the position (index) of object in the list
-
-**/
-template<typename ItemType>
-int LinkedList<ItemType>::getIndexOf(const ItemType &item) const {
-    Node<ItemType>* curr_item = head_;
-    int counter = 0;
-    while(curr_item != nullptr) {
-        if(curr_item->getItem() == item) {
-            return counter;
-        }
-        counter++;
-        curr_item = curr_item->getNext();
-    }
-    return -1;
-}
-
-
-
-
-/* @return  : the size of the list */
-template<typename ItemType>
-int LinkedList<ItemType>::getSize() const {
-    return size_;
-}
-
-
-  /* @return  : true if the list is empty, false otherwise */
-template<typename ItemType>
-bool LinkedList<ItemType>::isEmpty() const {
-    return size_ == 0 ? true : false;
-}
-
-
-
-
-// PRIVATE METHODS
-
-/*
-    @param   pos : the position of the item
-    @pre     : pos is a valid place in the list
-    @return  : a pointer to the node at pos, if pos is invalid, returns nullptr
-**/
-template<typename ItemType>
-Node<ItemType>* LinkedList<ItemType>::getAtPos(const int &pos) const {
-
-    if(pos < 0 || pos >= size_) {
-        return nullptr;
-    }
-
-    Node<ItemType>* curr_item = head_;
-    int counter = 0;
-    while(counter < pos && curr_item != nullptr) {
-        counter++;
-        curr_item = curr_item->getNext();
-    }
-    return curr_item;
-}
