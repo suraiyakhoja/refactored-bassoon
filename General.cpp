@@ -1,189 +1,54 @@
 
-
-
-#include <iostream>
-
-
-/* Default constructor*/
-template<typename ItemType>
-LinkedList<ItemType>::LinkedList() : head_{nullptr}, size_{0} {}
+#include "General.hpp"
 
 
 
-/* Destructor */
-template<typename ItemType>
-LinkedList<ItemType>::~LinkedList() {
-    clear();
-}
+General::General(const std::string general_post_name, const std::string general_post_body, const std::string general_account_username)
+:Post(general_post_name, general_post_body, general_account_username) 
+{
+    //sets the title, body, and username of the General post to params
+    Post::setTitle(general_post_name);
+    Post::setBody(general_post_body);
+    Post::setUsername(general_account_username);
 
+    //Generates the current time and stores it 
+    //time_t time_stamp_ = time(NULL);
+    getTimeStamp();
 
-
-/* @return  : the head pointer
-This function is for grading purposes*/
-template<typename ItemType>
-Node<ItemType>* LinkedList<ItemType>::getHeadPtr() const {
-    return head_;
-}
-
-
-
-
-/*
-    @post   : removes all items from the caller list
-**/
-template<typename ItemType>
-void LinkedList<ItemType>::clear() {
-
-    Node<ItemType>* curr_item = head_;
-    while(curr_item != nullptr) {
-        Node<ItemType>* temp = curr_item;
-        curr_item = curr_item->getNext();
-        // delete temp->getItem();
-        // temp->setItem(NULL);
-        // temp->setNext(nullptr);
-        delete temp;
-        temp = nullptr;
-    }
+    //Initializes the array reaction_tally[6] with default values
+    for (int i = 0; i < 6; i++) {reaction_tally[i] = 0;}
 
 }
 
 
-
-/*
-    @param  item: the item to insert in the list
-    @param  position: the position where to inserted
-    @pre position is a valid place within the list, otherwise false will be returned
-    @return   :  true if the item has been inserted in the caller list,
-                false otherwise
-    @post     : Inserts item in  list at  position
-
-**/
-template<typename ItemType>
-bool LinkedList<ItemType>::insert(const ItemType& item, const int &position){
-    if((position < 0 || position > size_)){
-        return false;
+bool General::reactToPost(const Reactions& react) {
+    if (react < 6) {
+        reaction_tally[react] += 1;
+        return true;
     }
-
-    Node<ItemType> *node = new Node<ItemType>();
-    node->setItem(item);
-
-    if(size_ == 0){
-        head_ = node;
-    }
-    else {
-        Node<ItemType> *iterator;
-
-        if(position == 0){
-            node->setNext(head_);
-            head_ = node;
-        }
-
-        else if (position == size_){
-            iterator = getAtPos(size_-1);
-            iterator->setNext(node);
-        }
-        else {
-            iterator = getAtPos(position-1);
-            node->setNext(iterator->getNext());
-            iterator->setNext(node);
-        }
-    }
-    size_++;
-    return true;
+    return false;
 }
 
-
-
-
-/*
-    @param  position:  the position where to remove
-    @pre position is a valid place within the list, otherwise false will be returned
-    @pre      : returns true if the item at position has been removed from the list,
-                false otherwise
-    @post     : removes node at  position
-**/
-template <typename ItemType>
-bool LinkedList<ItemType>::remove(const int&position) {
-    if (position < 0 || position >= size_) {
-        return false;
+    
+void General::getReactions() const{  
+    std::vector<std::string> temp = {"Likes", "Dislike", "Laugh", "Wow", "Sad", "Angry"};
+    for(int i = 0; i < 5 ; i++) {
+        std::cout << temp[i] << " : " << reaction_tally[i] << " | ";
     }
-
-    Node<ItemType> *iterator;
-
-    if (position == 0){
-        iterator = head_;
-        head_ = head_->getNext();
-    }
-    else {
-        iterator = getAtPos(position-1);
-        iterator->setNext(iterator->getNext()->getNext());
-        iterator = iterator->getNext();
-    }
-
-    return true;
+    std::cout << temp[5] << " : " << reaction_tally[5] << std::endl;
 
 }
 
-
-
-/*
-    @param   item : the item to find in the list
-    @pre      : takes item object and checks if exist in list and return
-    @return   : returns the position (index) of object in the list
-
-**/
-template<typename ItemType>
-int LinkedList<ItemType>::getIndexOf(const ItemType &item) const {
-    Node<ItemType>* curr_item = head_;
-    int counter = 0;
-    while(curr_item != nullptr) {
-        if(curr_item->getItem() == item) {
-            return counter;
-        }
-        counter++;
-        curr_item = curr_item->getNext();
-    }
-    return -1;
+    
+void General::displayPost() {
+    std::cout << '\n' << getTitle() << " at ";
+    getTimeStamp();
+    std::cout << getBody() << std::endl;
+    getReactions();
+    
+        
 }
 
+    
 
 
-
-/* @return  : the size of the list */
-template<typename ItemType>
-int LinkedList<ItemType>::getSize() const {
-    return size_;
-}
-
-
-  /* @return  : true if the list is empty, false otherwise */
-template<typename ItemType>
-bool LinkedList<ItemType>::isEmpty() const {
-    return size_ == 0 ? true : false;
-}
-
-
-
-
-// PRIVATE METHODS
-
-/*
-    @param   pos : the position of the item
-    @pre     : pos is a valid place in the list
-    @return  : a pointer to the node at pos, if pos is invalid, returns nullptr
-**/
-template<typename ItemType>
-Node<ItemType>* LinkedList<ItemType>::getAtPos(const int &pos) const {
-
-    if(pos < 0 || pos >= size_) {
-        return nullptr;
-    }
-
-    Node<ItemType>* curr_item = head_;
-    int counter = 0;
-    while(counter < pos && curr_item != nullptr) {
-        counter++;
-        curr_item = curr_item->getNext();
-    }
-    return curr_item;
-}
